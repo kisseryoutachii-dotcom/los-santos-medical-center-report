@@ -1,0 +1,908 @@
+import React, { useState } from 'react';
+import { 
+  Activity, 
+  Clock, 
+  Archive, 
+  ClipboardList, 
+  Syringe, 
+  HeartPulse, 
+  FileText, 
+  Stethoscope,
+  PlusCircle,
+  Save,
+  Timer,
+  History,
+  Trash2,
+  AlertTriangle,
+  Search,
+  Car
+} from 'lucide-react';
+
+// Fungsi bantuan untuk menghitung durasi waktu
+const calculateDuration = (start, end) => {
+  if (!start || !end) return '-';
+  const [startHour, startMin] = start.split(':').map(Number);
+  const [endHour, endMin] = end.split(':').map(Number);
+  
+  let startInMinutes = startHour * 60 + startMin;
+  let endInMinutes = endHour * 60 + endMin;
+  
+  // Penanganan untuk shift yang melewati tengah malam (contoh: 22:00 - 06:00)
+  if (endInMinutes < startInMinutes) {
+    endInMinutes += 24 * 60;
+  }
+  
+  const diffMinutes = endInMinutes - startInMinutes;
+  const hours = Math.floor(diffMinutes / 60);
+  const mins = diffMinutes % 60;
+  
+  return `${hours}j ${mins}m`;
+};
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState('laporan');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showStashDeleteConfirm, setShowStashDeleteConfirm] = useState(false);
+  const [showVehicleDeleteConfirm, setShowVehicleDeleteConfirm] = useState(false);
+  const [searchName, setSearchName] = useState('');
+
+  // --- STATE: LAPORAN SHIFT (DUTY) ---
+  const [dutyLogs, setDutyLogs] = useState([
+    {
+      id: 1,
+      nama: 'Dr. John Doe',
+      badgeNumber: '101',
+      jabatan: 'Attending Physician',
+      jamMasuk: '08:00',
+      jamKeluar: '16:00',
+      tanggal: new Date().toISOString().split('T')[0],
+      tindakan: { treatment: 5, revive: 2, opMinor: 1, opMajor: 0, mcu: 3, kartuSehat: 4 }
+    }
+  ]);
+
+  const [dutyForm, setDutyForm] = useState({
+    nama: '',
+    badgeNumber: '',
+    jabatan: '',
+    jamMasuk: '',
+    jamKeluar: '',
+    treatment: 0,
+    revive: 0,
+    opMinor: 0,
+    opMajor: 0,
+    mcu: 0,
+    kartuSehat: 0
+  });
+
+  // --- STATE: PENGAMBILAN BARANG (STASH) ---
+  const [stashLogs, setStashLogs] = useState([
+    {
+      id: 1,
+      nama: 'Dr. John Doe',
+      badgeNumber: '101',
+      jabatan: 'Attending Physician',
+      barang: 'First Aid',
+      jumlah: 5,
+      keperluan: 'Patroli Unit 1',
+      waktu: new Date().toLocaleString()
+    }
+  ]);
+
+  const [stashForm, setStashForm] = useState({
+    nama: '',
+    badgeNumber: '',
+    jabatan: '',
+    barang: '',
+    jumlah: 1,
+    keperluan: ''
+  });
+
+  // --- STATE: KENDARAAN DINAS ---
+  const [vehicleLogs, setVehicleLogs] = useState([
+    {
+      id: 1,
+      nama: 'Dr. John Doe',
+      badgeNumber: '101',
+      jabatan: 'Attending Physician',
+      kendaraan: 'Ambulance',
+      platNomor: 'LSMC-01',
+      keperluan: 'Patroli Kota',
+      waktu: new Date().toLocaleString()
+    }
+  ]);
+
+  const [vehicleForm, setVehicleForm] = useState({
+    nama: '',
+    badgeNumber: '',
+    jabatan: '',
+    kendaraan: '',
+    platNomor: '',
+    keperluan: ''
+  });
+
+  const daftarBarang = [
+    'Ifax',
+    'Anxiety Pills',
+    'First Aid',
+    'AED',
+    'Bandage',
+    'Painkillers',
+    'Surgical Kit',
+    'Wheelchair',
+    'Crutch',
+    'Radio',
+    'Handphone',
+    'Makanan',
+    'Minuman',
+    'Powerbank',
+    'Alat Service Hp'
+  ];
+
+  const daftarJabatan = [
+    'Chief Of Medical Center',
+    'Deputy Chief',
+    'Assistant Chief',
+    'Doctor Specialist',
+    'Doctor',
+    'Resident',
+    'Medical Student',
+    'Ambulanceman',
+    'Intern'
+  ];
+
+  const daftarKendaraan = [
+    'Sedan',
+    'Ambulance',
+    'Heli'
+  ];
+
+  // --- HANDLERS ---
+  const handleDutyChange = (e) => {
+    const { name, value } = e.target;
+    setDutyForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleStashChange = (e) => {
+    const { name, value } = e.target;
+    setStashForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleVehicleChange = (e) => {
+    const { name, value } = e.target;
+    setVehicleForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleResetMingguan = () => {
+    setDutyLogs([]);
+    setShowDeleteConfirm(false);
+  };
+
+  const handleResetStashMingguan = () => {
+    setStashLogs([]);
+    setShowStashDeleteConfirm(false);
+  };
+
+  const handleResetVehicleMingguan = () => {
+    setVehicleLogs([]);
+    setShowVehicleDeleteConfirm(false);
+  };
+
+  const submitDutyLog = (e) => {
+    e.preventDefault();
+    if (!dutyForm.nama || !dutyForm.badgeNumber || !dutyForm.jabatan || !dutyForm.jamMasuk || !dutyForm.jamKeluar) return alert('Lengkapi data wajib!');
+
+    const newLog = {
+      id: Date.now(),
+      nama: dutyForm.nama,
+      badgeNumber: dutyForm.badgeNumber,
+      jabatan: dutyForm.jabatan,
+      jamMasuk: dutyForm.jamMasuk,
+      jamKeluar: dutyForm.jamKeluar,
+      tanggal: new Date().toISOString().split('T')[0],
+      tindakan: {
+        treatment: parseInt(dutyForm.treatment) || 0,
+        revive: parseInt(dutyForm.revive) || 0,
+        opMinor: parseInt(dutyForm.opMinor) || 0,
+        opMajor: parseInt(dutyForm.opMajor) || 0,
+        mcu: parseInt(dutyForm.mcu) || 0,
+        kartuSehat: parseInt(dutyForm.kartuSehat) || 0,
+      }
+    };
+
+    setDutyLogs([newLog, ...dutyLogs]);
+    
+    // Reset Form
+    setDutyForm({
+      nama: '', badgeNumber: '', jabatan: '', jamMasuk: '', jamKeluar: '',
+      treatment: 0, revive: 0, opMinor: 0, opMajor: 0, mcu: 0, kartuSehat: 0
+    });
+  };
+
+  const submitStashLog = (e) => {
+    e.preventDefault();
+    if (!stashForm.nama || !stashForm.badgeNumber || !stashForm.jabatan || !stashForm.barang || stashForm.jumlah < 1) return alert('Lengkapi data wajib!');
+
+    const newLog = {
+      id: Date.now(),
+      nama: stashForm.nama,
+      badgeNumber: stashForm.badgeNumber,
+      jabatan: stashForm.jabatan,
+      barang: stashForm.barang,
+      jumlah: parseInt(stashForm.jumlah),
+      keperluan: stashForm.keperluan,
+      waktu: new Date().toLocaleString()
+    };
+
+    setStashLogs([newLog, ...stashLogs]);
+
+    // Reset Form
+    setStashForm({
+      nama: '', badgeNumber: '', jabatan: '', barang: '', jumlah: 1, keperluan: ''
+    });
+  };
+
+  const submitVehicleLog = (e) => {
+    e.preventDefault();
+    if (!vehicleForm.nama || !vehicleForm.badgeNumber || !vehicleForm.jabatan || !vehicleForm.kendaraan || !vehicleForm.platNomor) return alert('Lengkapi data wajib!');
+
+    const newLog = {
+      id: Date.now(),
+      nama: vehicleForm.nama,
+      badgeNumber: vehicleForm.badgeNumber,
+      jabatan: vehicleForm.jabatan,
+      kendaraan: vehicleForm.kendaraan,
+      platNomor: vehicleForm.platNomor,
+      keperluan: vehicleForm.keperluan,
+      waktu: new Date().toLocaleString()
+    };
+
+    setVehicleLogs([newLog, ...vehicleLogs]);
+
+    // Reset Form
+    setVehicleForm({
+      nama: '', badgeNumber: '', jabatan: '', kendaraan: '', platNomor: '', keperluan: ''
+    });
+  };
+
+  // --- FILTERING & SUMMARY LOGIC ---
+  const filteredDutyLogs = dutyLogs.filter(log => 
+    log.nama.toLowerCase().includes(searchName.toLowerCase()) || 
+    log.badgeNumber.includes(searchName)
+  );
+
+  const filteredSummary = filteredDutyLogs.reduce((acc, log) => {
+    Object.keys(log.tindakan).forEach(key => {
+      acc[key] = (acc[key] || 0) + log.tindakan[key];
+    });
+    return acc;
+  }, { treatment: 0, revive: 0, opMinor: 0, opMajor: 0, mcu: 0, kartuSehat: 0 });
+
+  const totalFilteredTindakan = Object.values(filteredSummary).reduce((a, b) => a + b, 0);
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
+      {/* Header */}
+      <header className="bg-red-600 text-white shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="bg-white p-2 rounded-full">
+              <HeartPulse className="h-8 w-8 text-red-600" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-wider">LSMC PORTAL</h1>
+              <p className="text-red-200 text-sm">Los Santos Medical Center</p>
+            </div>
+          </div>
+          <div className="hidden sm:block text-sm font-medium bg-red-700 px-4 py-2 rounded-lg">
+            Sistem Internal v1.0
+          </div>
+        </div>
+      </header>
+
+      {/* Navigation Tabs */}
+      <div className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex overflow-x-auto">
+          <button
+            onClick={() => setActiveTab('laporan')}
+            className={`flex items-center space-x-2 py-4 px-6 font-medium text-sm transition-colors duration-200 border-b-2 whitespace-nowrap ${
+              activeTab === 'laporan'
+                ? 'border-red-600 text-red-600'
+                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+            }`}
+          >
+            <ClipboardList className="w-5 h-5" />
+            <span>Isi Laporan Shift</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('stash')}
+            className={`flex items-center space-x-2 py-4 px-6 font-medium text-sm transition-colors duration-200 border-b-2 whitespace-nowrap ${
+              activeTab === 'stash'
+                ? 'border-red-600 text-red-600'
+                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+            }`}
+          >
+            <Archive className="w-5 h-5" />
+            <span>Gudang Medis (Stash)</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('kendaraan')}
+            className={`flex items-center space-x-2 py-4 px-6 font-medium text-sm transition-colors duration-200 border-b-2 whitespace-nowrap ${
+              activeTab === 'kendaraan'
+                ? 'border-red-600 text-red-600'
+                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+            }`}
+          >
+            <Car className="w-5 h-5" />
+            <span>Kendaraan Dinas</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('riwayat')}
+            className={`flex items-center space-x-2 py-4 px-6 font-medium text-sm transition-colors duration-200 border-b-2 whitespace-nowrap ${
+              activeTab === 'riwayat'
+                ? 'border-red-600 text-red-600'
+                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+            }`}
+          >
+            <History className="w-5 h-5" />
+            <span>Riwayat Laporan</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {/* --- TAB LAPORAN --- */}
+        {activeTab === 'laporan' && (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            
+            {/* Form Laporan */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center">
+                <FileText className="w-5 h-5 text-slate-500 mr-2" />
+                <h2 className="text-lg font-semibold text-slate-800">Form Laporan Shift</h2>
+              </div>
+              
+              <form onSubmit={submitDutyLog} className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Nama Lengkap</label>
+                    <input 
+                      type="text" name="nama" value={dutyForm.nama} onChange={handleDutyChange}
+                      className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all" 
+                      placeholder="Contoh: Dr. Michael" required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Badge Number</label>
+                    <input 
+                      type="text" name="badgeNumber" value={dutyForm.badgeNumber} onChange={handleDutyChange}
+                      className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all" 
+                      placeholder="Contoh: 101" required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Jabatan</label>
+                    <select 
+                      name="jabatan" value={dutyForm.jabatan} onChange={handleDutyChange}
+                      className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 bg-white transition-all" required
+                    >
+                      <option value="">-- Pilih Jabatan --</option>
+                      {daftarJabatan.map(jabatan => <option key={jabatan} value={jabatan}>{jabatan}</option>)}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Jam On Duty</label>
+                    <div className="relative">
+                      <Clock className="absolute left-3 top-2.5 h-5 w-5 text-slate-400" />
+                      <input 
+                        type="time" name="jamMasuk" value={dutyForm.jamMasuk} onChange={handleDutyChange}
+                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500" required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Jam Off Duty</label>
+                    <div className="relative">
+                      <Clock className="absolute left-3 top-2.5 h-5 w-5 text-slate-400" />
+                      <input 
+                        type="time" name="jamKeluar" value={dutyForm.jamKeluar} onChange={handleDutyChange}
+                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500" required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4 border-b pb-2">Rincian Tindakan Medis</h3>
+                
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+                  {[
+                    { id: 'treatment', label: 'Treatment', icon: <Activity className="w-4 h-4 text-green-500"/> },
+                    { id: 'revive', label: 'Revive', icon: <HeartPulse className="w-4 h-4 text-red-500"/> },
+                    { id: 'opMinor', label: 'Op. Minor', icon: <ScalpelIcon /> },
+                    { id: 'opMajor', label: 'Op. Major', icon: <Stethoscope className="w-4 h-4 text-blue-500"/> },
+                    { id: 'mcu', label: 'MCU', icon: <ClipboardList className="w-4 h-4 text-purple-500"/> },
+                    { id: 'kartuSehat', label: 'Kartu Sehat', icon: <FileText className="w-4 h-4 text-amber-500"/> },
+                  ].map((item) => (
+                    <div key={item.id} className="bg-slate-50 p-3 rounded-lg border border-slate-200 hover:border-red-300 transition-colors">
+                      <label className="flex items-center text-xs font-medium text-slate-600 mb-2">
+                        {item.icon} <span className="ml-1">{item.label}</span>
+                      </label>
+                      <input 
+                        type="number" min="0" name={item.id} value={dutyForm[item.id]} onChange={handleDutyChange}
+                        className="w-full px-3 py-1.5 text-center font-semibold rounded border border-slate-300 focus:ring-2 focus:ring-red-500" 
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex justify-end">
+                  <button type="submit" className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-medium flex items-center transition-colors shadow-sm">
+                    <Save className="w-5 h-5 mr-2" />
+                    Simpan Laporan
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* --- TAB PENGAMBILAN BARANG --- */}
+        {activeTab === 'stash' && (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              
+              {/* Form Withdraw */}
+              <div className="lg:col-span-1">
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden sticky top-24">
+                  <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center">
+                    <PlusCircle className="w-5 h-5 text-slate-500 mr-2" />
+                    <h2 className="text-lg font-semibold text-slate-800">Withdraw Barang</h2>
+                  </div>
+                  <form onSubmit={submitStashLog} className="p-6 space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Nama Pegawai</label>
+                      <input 
+                        type="text" name="nama" value={stashForm.nama} onChange={handleStashChange}
+                        className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" 
+                        placeholder="Nama Lengkap" required
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Badge</label>
+                        <input 
+                          type="text" name="badgeNumber" value={stashForm.badgeNumber} onChange={handleStashChange}
+                          className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" 
+                          placeholder="Ex: 101" required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Jabatan</label>
+                        <select 
+                          name="jabatan" value={stashForm.jabatan} onChange={handleStashChange}
+                          className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 bg-white" required
+                        >
+                          <option value="">-- Jabatan --</option>
+                          {daftarJabatan.map(jabatan => <option key={jabatan} value={jabatan}>{jabatan}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Pilih Barang</label>
+                      <select 
+                        name="barang" value={stashForm.barang} onChange={handleStashChange}
+                        className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 bg-white" required
+                      >
+                        <option value="">-- Pilih Item --</option>
+                        {daftarBarang.map(item => <option key={item} value={item}>{item}</option>)}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Jumlah</label>
+                      <input 
+                        type="number" min="1" name="jumlah" value={stashForm.jumlah} onChange={handleStashChange}
+                        className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Catatan / Keperluan</label>
+                      <textarea 
+                        name="keperluan" rows="2" value={stashForm.keperluan} onChange={handleStashChange}
+                        className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" 
+                        placeholder="Contoh: Stok tas medis"
+                      ></textarea>
+                    </div>
+
+                    <button type="submit" className="w-full bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-lg font-medium flex items-center justify-center transition-colors">
+                      <Archive className="w-5 h-5 mr-2" />
+                      Ambil Barang
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+              {/* Tabel Riwayat Stash */}
+              <div className="lg:col-span-2">
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                   <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center">
+                      <Syringe className="w-5 h-5 text-slate-500 mr-2" />
+                      <h2 className="text-lg font-semibold text-slate-800">Log Pengambilan Gudang</h2>
+                      <span className="ml-3 bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">{stashLogs.length} Log</span>
+                    </div>
+
+                    {showStashDeleteConfirm ? (
+                      <div className="flex items-center space-x-2 bg-red-50 p-2 rounded-lg border border-red-100 animate-in fade-in zoom-in duration-200">
+                        <AlertTriangle className="w-4 h-4 text-red-600" />
+                        <span className="text-xs text-red-800 font-medium mr-2">Reset log gudang?</span>
+                        <button onClick={handleResetStashMingguan} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">Ya, Hapus</button>
+                        <button onClick={() => setShowStashDeleteConfirm(false)} className="bg-slate-200 hover:bg-slate-300 text-slate-800 px-3 py-1 rounded text-xs font-medium transition-colors">Batal</button>
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={() => setShowStashDeleteConfirm(true)}
+                        disabled={stashLogs.length === 0}
+                        className="flex items-center text-sm text-red-600 hover:text-red-800 border border-red-200 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Trash2 className="w-4 h-4 mr-1.5" />
+                        Reset Log Gudang
+                      </button>
+                    )}
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                      <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b">
+                        <tr>
+                          <th className="px-6 py-3 font-medium">Waktu</th>
+                          <th className="px-6 py-3 font-medium">Pegawai</th>
+                          <th className="px-6 py-3 font-medium">Item & Jumlah</th>
+                          <th className="px-6 py-3 font-medium">Keperluan</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {stashLogs.map((log) => (
+                          <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-500">{log.waktu}</td>
+                            <td className="px-6 py-4">
+                              <div className="font-medium text-slate-900">{log.nama}</div>
+                              <div className="text-xs text-slate-500">{log.jabatan} | Badge: {log.badgeNumber}</div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="font-semibold text-slate-800">{log.barang}</span>
+                              <span className="ml-2 bg-slate-100 text-slate-600 py-0.5 px-2 rounded-full text-xs font-bold">x{log.jumlah}</span>
+                            </td>
+                            <td className="px-6 py-4 text-slate-600 italic">
+                              {log.keperluan || '-'}
+                            </td>
+                          </tr>
+                        ))}
+                        {stashLogs.length === 0 && (
+                          <tr>
+                            <td colSpan="4" className="px-6 py-8 text-center text-slate-400">Belum ada catatan pengambilan barang.</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {/* --- TAB KENDARAAN DINAS --- */}
+        {activeTab === 'kendaraan' && (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              
+              {/* Form Kendaraan */}
+              <div className="lg:col-span-1">
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden sticky top-24">
+                  <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center">
+                    <Car className="w-5 h-5 text-slate-500 mr-2" />
+                    <h2 className="text-lg font-semibold text-slate-800">Gunakan Kendaraan</h2>
+                  </div>
+                  <form onSubmit={submitVehicleLog} className="p-6 space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Nama Pegawai</label>
+                      <input 
+                        type="text" name="nama" value={vehicleForm.nama} onChange={handleVehicleChange}
+                        className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" 
+                        placeholder="Nama Lengkap" required
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Badge</label>
+                        <input 
+                          type="text" name="badgeNumber" value={vehicleForm.badgeNumber} onChange={handleVehicleChange}
+                          className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" 
+                          placeholder="Ex: 101" required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Jabatan</label>
+                        <select 
+                          name="jabatan" value={vehicleForm.jabatan} onChange={handleVehicleChange}
+                          className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 bg-white" required
+                        >
+                          <option value="">-- Jabatan --</option>
+                          {daftarJabatan.map(jabatan => <option key={jabatan} value={jabatan}>{jabatan}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Jenis Kendaraan</label>
+                      <select 
+                        name="kendaraan" value={vehicleForm.kendaraan} onChange={handleVehicleChange}
+                        className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 bg-white" required
+                      >
+                        <option value="">-- Pilih Kendaraan --</option>
+                        {daftarKendaraan.map(kendaraan => <option key={kendaraan} value={kendaraan}>{kendaraan}</option>)}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Plat Nomor / Callsign</label>
+                      <input 
+                        type="text" name="platNomor" value={vehicleForm.platNomor} onChange={handleVehicleChange}
+                        className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" 
+                        placeholder="Contoh: LSMC-01" required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Keperluan</label>
+                      <textarea 
+                        name="keperluan" rows="2" value={vehicleForm.keperluan} onChange={handleVehicleChange}
+                        className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" 
+                        placeholder="Contoh: Patroli kota / Transport pasien"
+                      ></textarea>
+                    </div>
+
+                    <button type="submit" className="w-full bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-lg font-medium flex items-center justify-center transition-colors">
+                      <Save className="w-5 h-5 mr-2" />
+                      Catat Penggunaan
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+              {/* Tabel Riwayat Kendaraan */}
+              <div className="lg:col-span-2">
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                   <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center">
+                      <Car className="w-5 h-5 text-slate-500 mr-2" />
+                      <h2 className="text-lg font-semibold text-slate-800">Log Kendaraan Dinas</h2>
+                      <span className="ml-3 bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">{vehicleLogs.length} Log</span>
+                    </div>
+
+                    {showVehicleDeleteConfirm ? (
+                      <div className="flex items-center space-x-2 bg-red-50 p-2 rounded-lg border border-red-100 animate-in fade-in zoom-in duration-200">
+                        <AlertTriangle className="w-4 h-4 text-red-600" />
+                        <span className="text-xs text-red-800 font-medium mr-2">Reset log kendaraan?</span>
+                        <button onClick={handleResetVehicleMingguan} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">Ya, Hapus</button>
+                        <button onClick={() => setShowVehicleDeleteConfirm(false)} className="bg-slate-200 hover:bg-slate-300 text-slate-800 px-3 py-1 rounded text-xs font-medium transition-colors">Batal</button>
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={() => setShowVehicleDeleteConfirm(true)}
+                        disabled={vehicleLogs.length === 0}
+                        className="flex items-center text-sm text-red-600 hover:text-red-800 border border-red-200 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Trash2 className="w-4 h-4 mr-1.5" />
+                        Reset Log Kendaraan
+                      </button>
+                    )}
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                      <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b">
+                        <tr>
+                          <th className="px-6 py-3 font-medium">Waktu Pinjam</th>
+                          <th className="px-6 py-3 font-medium">Pegawai</th>
+                          <th className="px-6 py-3 font-medium">Kendaraan & Plat</th>
+                          <th className="px-6 py-3 font-medium">Keperluan</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {vehicleLogs.map((log) => (
+                          <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-500">{log.waktu}</td>
+                            <td className="px-6 py-4">
+                              <div className="font-medium text-slate-900">{log.nama}</div>
+                              <div className="text-xs text-slate-500">{log.jabatan} | Badge: {log.badgeNumber}</div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="font-semibold text-slate-800">{log.kendaraan}</span>
+                              <span className="ml-2 bg-slate-100 text-slate-600 py-0.5 px-2 rounded text-xs border border-slate-200 font-mono">
+                                {log.platNomor}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-slate-600 italic">
+                              {log.keperluan || '-'}
+                            </td>
+                          </tr>
+                        ))}
+                        {vehicleLogs.length === 0 && (
+                          <tr>
+                            <td colSpan="4" className="px-6 py-8 text-center text-slate-400">Belum ada catatan penggunaan kendaraan.</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {/* --- TAB RIWAYAT LAPORAN --- */}
+        {activeTab === 'riwayat' && (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Riwayat Laporan */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                  <div className="flex items-center">
+                    <History className="w-5 h-5 text-slate-500 mr-2" />
+                    <h2 className="text-lg font-semibold text-slate-800">Riwayat Laporan Keseluruhan</h2>
+                    <span className="ml-3 bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">{dutyLogs.length} Laporan</span>
+                  </div>
+                  
+                  {showDeleteConfirm ? (
+                    <div className="flex items-center space-x-2 bg-red-50 p-2 rounded-lg border border-red-100 animate-in fade-in zoom-in duration-200">
+                      <AlertTriangle className="w-4 h-4 text-red-600" />
+                      <span className="text-xs text-red-800 font-medium mr-2">Reset semua laporan minggu ini?</span>
+                      <button onClick={handleResetMingguan} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">Ya, Hapus</button>
+                      <button onClick={() => setShowDeleteConfirm(false)} className="bg-slate-200 hover:bg-slate-300 text-slate-800 px-3 py-1 rounded text-xs font-medium transition-colors">Batal</button>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={() => setShowDeleteConfirm(true)}
+                      disabled={dutyLogs.length === 0}
+                      className="flex items-center text-sm text-red-600 hover:text-red-800 border border-red-200 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Trash2 className="w-4 h-4 mr-1.5" />
+                      Reset Laporan Mingguan
+                    </button>
+                  )}
+                </div>
+
+                {/* Search Bar */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 h-5 w-5 text-slate-400" />
+                  <input 
+                    type="text" 
+                    placeholder="Cari Nama Pegawai atau Badge Number..." 
+                    value={searchName}
+                    onChange={(e) => setSearchName(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all text-sm"
+                  />
+                </div>
+
+                {/* Summary Section (Muncul saat ada pencarian) */}
+                {searchName && (
+                  <div className="mt-3 bg-white p-3 rounded-lg border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between animate-in fade-in zoom-in duration-300 gap-3">
+                    <div className="text-sm">
+                      <span className="font-semibold text-slate-800">Hasil Pencarian:</span> Ditemukan <span className="font-bold text-red-600">{filteredDutyLogs.length}</span> laporan.
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Badge label={`Total Tindakan: ${totalFilteredTindakan}`} color="indigo" />
+                      {filteredSummary.treatment > 0 && <Badge label={`Trt: ${filteredSummary.treatment}`} color="green" />}
+                      {filteredSummary.revive > 0 && <Badge label={`Rev: ${filteredSummary.revive}`} color="red" />}
+                      {filteredSummary.opMinor > 0 && <Badge label={`OpMin: ${filteredSummary.opMinor}`} color="blue" />}
+                      {filteredSummary.opMajor > 0 && <Badge label={`OpMaj: ${filteredSummary.opMajor}`} color="indigo" />}
+                      {filteredSummary.mcu > 0 && <Badge label={`MCU: ${filteredSummary.mcu}`} color="purple" />}
+                      {filteredSummary.kartuSehat > 0 && <Badge label={`KS: ${filteredSummary.kartuSehat}`} color="amber" />}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b">
+                    <tr>
+                      <th className="px-6 py-3 font-medium">Tanggal</th>
+                      <th className="px-6 py-3 font-medium">Pegawai</th>
+                      <th className="px-6 py-3 font-medium text-center">Waktu Duty</th>
+                      <th className="px-6 py-3 font-medium text-center">Total Durasi</th>
+                      <th className="px-6 py-3 font-medium text-center">Total Tindakan</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredDutyLogs.map((log) => {
+                      const totalTindakan = Object.values(log.tindakan).reduce((a, b) => a + b, 0);
+                      return (
+                        <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap text-slate-500">{log.tanggal}</td>
+                          <td className="px-6 py-4">
+                            <div className="font-medium text-slate-900">{log.nama}</div>
+                            <div className="text-xs text-slate-500">{log.jabatan} | Badge: {log.badgeNumber}</div>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <span className="bg-green-100 text-green-800 py-1 px-2 rounded text-xs">{log.jamMasuk}</span>
+                            <span className="mx-2 text-slate-400">-</span>
+                            <span className="bg-slate-100 text-slate-800 py-1 px-2 rounded text-xs">{log.jamKeluar}</span>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <span className="inline-flex items-center justify-center text-slate-700 font-semibold bg-slate-100 px-2.5 py-1 rounded-md text-xs border border-slate-200">
+                              <Timer className="w-3 h-3 mr-1.5 text-slate-500" />
+                              {calculateDuration(log.jamMasuk, log.jamKeluar)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex flex-wrap gap-1 justify-center max-w-xs mx-auto">
+                              {log.tindakan.treatment > 0 && <Badge label={`Trt: ${log.tindakan.treatment}`} color="green" />}
+                              {log.tindakan.revive > 0 && <Badge label={`Rev: ${log.tindakan.revive}`} color="red" />}
+                              {log.tindakan.opMinor > 0 && <Badge label={`OpMin: ${log.tindakan.opMinor}`} color="blue" />}
+                              {log.tindakan.opMajor > 0 && <Badge label={`OpMaj: ${log.tindakan.opMajor}`} color="indigo" />}
+                              {log.tindakan.mcu > 0 && <Badge label={`MCU: ${log.tindakan.mcu}`} color="purple" />}
+                              {log.tindakan.kartuSehat > 0 && <Badge label={`KS: ${log.tindakan.kartuSehat}`} color="amber" />}
+                              {totalTindakan === 0 && <span className="text-slate-400 text-xs italic">Tidak ada tindakan</span>}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {filteredDutyLogs.length === 0 && (
+                      <tr>
+                        <td colSpan="5" className="px-6 py-8 text-center text-slate-400">
+                          {searchName ? 'Tidak ada laporan yang cocok dengan pencarian.' : 'Belum ada riwayat laporan shift.'}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </main>
+    </div>
+  );
+}
+
+// Komponen Helper untuk Badge Warna-warni
+function Badge({ label, color }) {
+  const colorClasses = {
+    green: 'bg-green-100 text-green-700 border-green-200',
+    red: 'bg-red-100 text-red-700 border-red-200',
+    blue: 'bg-blue-100 text-blue-700 border-blue-200',
+    indigo: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+    purple: 'bg-purple-100 text-purple-700 border-purple-200',
+    amber: 'bg-amber-100 text-amber-700 border-amber-200',
+  };
+  
+  return (
+    <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${colorClasses[color]}`}>
+      {label}
+    </span>
+  );
+}
+
+// Custom SVG Icon jika tidak ada di lucide (Scalpel)
+function ScalpelIcon() {
+  return (
+    <svg className="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+    </svg>
+  );
+}

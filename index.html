@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LSMC Portal System</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Phosphor Icons CDN -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- Custom CSS untuk Animasi (Menggantikan tailwindcss-animate plugin) -->
+    <style>
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        .zoom-in {
+            animation: zoomIn 0.2s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes zoomIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800 font-sans">
+
+    <!-- Header -->
+    <header class="bg-red-600 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white p-2 rounded-full flex items-center justify-center">
+                    <i class="ph ph-heartbeat text-3xl text-red-600"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-wider">LSMC PORTAL</h1>
+                    <p class="text-red-200 text-sm">Los Santos Medical Center</p>
+                </div>
+            </div>
+            <div class="hidden sm:block text-sm font-medium bg-red-700 px-4 py-2 rounded-lg">
+                Sistem Internal v1.0
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex overflow-x-auto" id="tab-buttons">
+            <button onclick="switchTab('laporan')" id="btn-laporan" class="tab-btn flex items-center space-x-2 py-4 px-6 font-medium text-sm transition-colors duration-200 border-b-2 border-red-600 text-red-600 whitespace-nowrap">
+                <i class="ph ph-clipboard-text text-xl"></i>
+                <span>Isi Laporan Shift</span>
+            </button>
+            <button onclick="switchTab('stash')" id="btn-stash" class="tab-btn flex items-center space-x-2 py-4 px-6 font-medium text-sm transition-colors duration-200 border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap">
+                <i class="ph ph-archive text-xl"></i>
+                <span>Gudang Medis (Stash)</span>
+            </button>
+            <button onclick="switchTab('kendaraan')" id="btn-kendaraan" class="tab-btn flex items-center space-x-2 py-4 px-6 font-medium text-sm transition-colors duration-200 border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap">
+                <i class="ph ph-car text-xl"></i>
+                <span>Kendaraan Dinas</span>
+            </button>
+            <button onclick="switchTab('riwayat')" id="btn-riwayat" class="tab-btn flex items-center space-x-2 py-4 px-6 font-medium text-sm transition-colors duration-200 border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap">
+                <i class="ph ph-clock-counter-clockwise text-xl"></i>
+                <span>Riwayat Laporan</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- ================= TAB LAPORAN ================= -->
+        <div id="tab-laporan" class="tab-content space-y-8 fade-in">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center">
+                    <i class="ph ph-file-text text-xl text-slate-500 mr-2"></i>
+                    <h2 class="text-lg font-semibold text-slate-800">Form Laporan Shift</h2>
+                </div>
+                
+                <form id="duty-form" class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Nama Lengkap</label>
+                            <input type="text" id="duty-nama" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all" placeholder="Contoh: Dr. Michael" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Badge Number</label>
+                            <input type="text" id="duty-badge" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all" placeholder="Contoh: 101" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Jabatan</label>
+                            <select id="duty-jabatan" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 outline-none bg-white transition-all" required>
+                                <option value="">-- Pilih Jabatan --</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Jam On Duty</label>
+                            <div class="relative">
+                                <i class="ph ph-clock absolute left-3 top-2.5 text-xl text-slate-400"></i>
+                                <input type="time" id="duty-jamMasuk" class="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none" required>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Jam Off Duty</label>
+                            <div class="relative">
+                                <i class="ph ph-clock absolute left-3 top-2.5 text-xl text-slate-400"></i>
+                                <input type="time" id="duty-jamKeluar" class="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4 border-b pb-2">Rincian Tindakan Medis</h3>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+                        <!-- Treatment -->
+                        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 hover:border-red-300 transition-colors">
+                            <label class="flex items-center text-xs font-medium text-slate-600 mb-2">
+                                <i class="ph ph-activity text-green-500 mr-1 text-base"></i> Treatment
+                            </label>
+                            <input type="number" min="0" id="duty-treatment" value="0" class="w-full px-3 py-1.5 text-center font-semibold rounded border border-slate-300 focus:ring-2 focus:ring-red-500 outline-none">
+                        </div>
+                        <!-- Revive -->
+                        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 hover:border-red-300 transition-colors">
+                            <label class="flex items-center text-xs font-medium text-slate-600 mb-2">
+                                <i class="ph ph-heartbeat text-red-500 mr-1 text-base"></i> Revive
+                            </label>
+                            <input type="number" min="0" id="duty-revive" value="0" class="w-full px-3 py-1.5 text-center font-semibold rounded border border-slate-300 focus:ring-2 focus:ring-red-500 outline-none">
+                        </div>
+                        <!-- Op Minor -->
+                        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 hover:border-red-300 transition-colors">
+                            <label class="flex items-center text-xs font-medium text-slate-600 mb-2">
+                                <svg class="w-4 h-4 text-slate-600 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> Op. Minor
+                            </label>
+                            <input type="number" min="0" id="duty-opMinor" value="0" class="w-full px-3 py-1.5 text-center font-semibold rounded border border-slate-300 focus:ring-2 focus:ring-red-500 outline-none">
+                        </div>
+                        <!-- Op Major -->
+                        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 hover:border-red-300 transition-colors">
+                            <label class="flex items-center text-xs font-medium text-slate-600 mb-2">
+                                <i class="ph ph-stethoscope text-blue-500 mr-1 text-base"></i> Op. Major
+                            </label>
+                            <input type="number" min="0" id="duty-opMajor" value="0" class="w-full px-3 py-1.5 text-center font-semibold rounded border border-slate-300 focus:ring-2 focus:ring-red-500 outline-none">
+                        </div>
+                        <!-- MCU -->
+                        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 hover:border-red-300 transition-colors">
+                            <label class="flex items-center text-xs font-medium text-slate-600 mb-2">
+                                <i class="ph ph-clipboard-text text-purple-500 mr-1 text-base"></i> MCU
+                            </label>
+                            <input type="number" min="0" id="duty-mcu" value="0" class="w-full px-3 py-1.5 text-center font-semibold rounded border border-slate-300 focus:ring-2 focus:ring-red-500 outline-none">
+                        </div>
+                        <!-- Kartu Sehat -->
+                        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 hover:border-red-300 transition-colors">
+                            <label class="flex items-center text-xs font-medium text-slate-600 mb-2">
+                                <i class="ph ph-file-text text-amber-500 mr-1 text-base"></i> Kartu Sehat
+                            </label>
+                            <input type="number" min="0" id="duty-kartuSehat" value="0" class="w-full px-3 py-1.5 text-center font-semibold rounded border border-slate-300 focus:ring-2 focus:ring-red-500 outline-none">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-medium flex items-center transition-colors shadow-sm outline-none">
+                            <i class="ph ph-floppy-disk text-xl mr-2"></i>
+                            Simpan Laporan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ================= TAB GUDANG MEDIS ================= -->
+        <div id="tab-stash" class="tab-content space-y-8 hidden fade-in">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Form Withdraw -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden sticky top-24">
+                        <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center">
+                            <i class="ph ph-plus-circle text-xl text-slate-500 mr-2"></i>
+                            <h2 class="text-lg font-semibold text-slate-800">Withdraw Barang</h2>
+                        </div>
+                        <form id="stash-form" class="p-6 space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Nama Pegawai</label>
+                                <input type="text" id="stash-nama" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Nama Lengkap" required>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Badge</label>
+                                    <input type="text" id="stash-badge" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Ex: 101" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Jabatan</label>
+                                    <select id="stash-jabatan" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 outline-none bg-white" required>
+                                        <option value="">-- Jabatan --</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Pilih Barang</label>
+                                <select id="stash-barang" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 outline-none bg-white" required>
+                                    <option value="">-- Pilih Item --</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Jumlah</label>
+                                <input type="number" min="1" id="stash-jumlah" value="1" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 outline-none" required>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Catatan / Keperluan</label>
+                                <textarea id="stash-keperluan" rows="2" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Contoh: Stok tas medis"></textarea>
+                            </div>
+
+                            <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-lg font-medium flex items-center justify-center transition-colors outline-none">
+                                <i class="ph ph-archive text-xl mr-2"></i>
+                                Ambil Barang
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Tabel Riwayat Stash -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div class="flex items-center">
+                                <i class="ph ph-syringe text-xl text-slate-500 mr-2"></i>
+                                <h2 class="text-lg font-semibold text-slate-800">Log Pengambilan Gudang</h2>
+                                <span id="stash-count" class="ml-3 bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">1 Log</span>
+                            </div>
+
+                            <!-- Delete Confirm Area -->
+                            <div id="stash-delete-confirm" class="hidden flex items-center space-x-2 bg-red-50 p-2 rounded-lg border border-red-100 zoom-in">
+                                <i class="ph ph-warning text-red-600"></i>
+                                <span class="text-xs text-red-800 font-medium mr-2">Reset log gudang?</span>
+                                <button onclick="executeResetStash()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">Ya, Hapus</button>
+                                <button onclick="toggleDeleteConfirm('stash', false)" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-3 py-1 rounded text-xs font-medium transition-colors">Batal</button>
+                            </div>
+                            
+                            <button id="stash-delete-btn" onclick="toggleDeleteConfirm('stash', true)" class="flex items-center text-sm text-red-600 hover:text-red-800 border border-red-200 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors outline-none">
+                                <i class="ph ph-trash mr-1.5"></i>
+                                Reset Log Gudang
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b">
+                                    <tr>
+                                        <th class="px-6 py-3 font-medium">Waktu</th>
+                                        <th class="px-6 py-3 font-medium">Pegawai</th>
+                                        <th class="px-6 py-3 font-medium">Item & Jumlah</th>
+                                        <th class="px-6 py-3 font-medium">Keperluan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stash-table-body" class="divide-y divide-slate-100">
+                                    <!-- JS Rendered -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB KENDARAAN DINAS ================= -->
+        <div id="tab-kendaraan" class="tab-content space-y-8 hidden fade-in">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Form Kendaraan -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden sticky top-24">
+                        <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center">
+                            <i class="ph ph-car text-xl text-slate-500 mr-2"></i>
+                            <h2 class="text-lg font-semibold text-slate-800">Gunakan Kendaraan</h2>
+                        </div>
+                        <form id="vehicle-form" class="p-6 space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Nama Pegawai</label>
+                                <input type="text" id="vehicle-nama" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Nama Lengkap" required>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Badge</label>
+                                    <input type="text" id="vehicle-badge" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Ex: 101" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Jabatan</label>
+                                    <select id="vehicle-jabatan" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 outline-none bg-white" required>
+                                        <option value="">-- Jabatan --</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Jenis Kendaraan</label>
+                                <select id="vehicle-jenis" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 outline-none bg-white" required>
+                                    <option value="">-- Pilih Kendaraan --</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Plat Nomor / Callsign</label>
+                                <input type="text" id="vehicle-plat" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Contoh: LSMC-01" required>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Keperluan</label>
+                                <textarea id="vehicle-keperluan" rows="2" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Contoh: Patroli kota / Transport pasien"></textarea>
+                            </div>
+
+                            <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-lg font-medium flex items-center justify-center transition-colors outline-none">
+                                <i class="ph ph-floppy-disk text-xl mr-2"></i>
+                                Catat Penggunaan
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Tabel Riwayat Kendaraan -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div class="flex items-center">
+                                <i class="ph ph-car text-xl text-slate-500 mr-2"></i>
+                                <h2 class="text-lg font-semibold text-slate-800">Log Kendaraan Dinas</h2>
+                                <span id="vehicle-count" class="ml-3 bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">1 Log</span>
+                            </div>
+
+                            <!-- Delete Confirm Area -->
+                            <div id="vehicle-delete-confirm" class="hidden flex items-center space-x-2 bg-red-50 p-2 rounded-lg border border-red-100 zoom-in">
+                                <i class="ph ph-warning text-red-600"></i>
+                                <span class="text-xs text-red-800 font-medium mr-2">Reset log kendaraan?</span>
+                                <button onclick="executeResetVehicle()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">Ya, Hapus</button>
+                                <button onclick="toggleDeleteConfirm('vehicle', false)" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-3 py-1 rounded text-xs font-medium transition-colors">Batal</button>
+                            </div>
+
+                            <button id="vehicle-delete-btn" onclick="toggleDeleteConfirm('vehicle', true)" class="flex items-center text-sm text-red-600 hover:text-red-800 border border-red-200 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors outline-none">
+                                <i class="ph ph-trash mr-1.5"></i>
+                                Reset Log Kendaraan
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b">
+                                    <tr>
+                                        <th class="px-6 py-3 font-medium">Waktu Pinjam</th>
+                                        <th class="px-6 py-3 font-medium">Pegawai</th>
+                                        <th class="px-6 py-3 font-medium">Kendaraan & Plat</th>
+                                        <th class="px-6 py-3 font-medium">Keperluan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vehicle-table-body" class="divide-y divide-slate-100">
+                                    <!-- JS Rendered -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB RIWAYAT LAPORAN ================= -->
+        <div id="tab-riwayat" class="tab-content space-y-8 hidden fade-in">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-6 py-4 border-b border-slate-200">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                        <div class="flex items-center">
+                            <i class="ph ph-clock-counter-clockwise text-xl text-slate-500 mr-2"></i>
+                            <h2 class="text-lg font-semibold text-slate-800">Riwayat Laporan Keseluruhan</h2>
+                            <span id="duty-count" class="ml-3 bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">1 Laporan</span>
+                        </div>
+                        
+                        <!-- Delete Confirm Area -->
+                        <div id="duty-delete-confirm" class="hidden flex items-center space-x-2 bg-red-50 p-2 rounded-lg border border-red-100 zoom-in">
+                            <i class="ph ph-warning text-red-600"></i>
+                            <span class="text-xs text-red-800 font-medium mr-2">Reset semua laporan?</span>
+                            <button onclick="executeResetDuty()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">Ya, Hapus</button>
+                            <button onclick="toggleDeleteConfirm('duty', false)" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-3 py-1 rounded text-xs font-medium transition-colors">Batal</button>
+                        </div>
+                        
+                        <button id="duty-delete-btn" onclick="toggleDeleteConfirm('duty', true)" class="flex items-center text-sm text-red-600 hover:text-red-800 border border-red-200 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors outline-none">
+                            <i class="ph ph-trash mr-1.5"></i>
+                            Reset Laporan Mingguan
+                        </button>
+                    </div>
+
+                    <!-- Search Bar -->
+                    <div class="relative">
+                        <i class="ph ph-magnifying-glass absolute left-3 top-2.5 text-xl text-slate-400"></i>
+                        <input type="text" id="search-input" placeholder="Cari Nama Pegawai atau Badge Number..." class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all text-sm">
+                    </div>
+
+                    <!-- Summary Section -->
+                    <div id="summary-section" class="hidden mt-3 bg-white p-3 rounded-lg border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 zoom-in">
+                        <div class="text-sm">
+                            <span class="font-semibold text-slate-800">Hasil Pencarian:</span> Ditemukan <span id="summary-count" class="font-bold text-red-600">0</span> laporan.
+                        </div>
+                        <div id="summary-badges" class="flex flex-wrap gap-1.5">
+                            <!-- JS Rendered -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b">
+                            <tr>
+                                <th class="px-6 py-3 font-medium">Tanggal</th>
+                                <th class="px-6 py-3 font-medium">Pegawai</th>
+                                <th class="px-6 py-3 font-medium text-center">Waktu Duty</th>
+                                <th class="px-6 py-3 font-medium text-center">Total Durasi</th>
+                                <th class="px-6 py-3 font-medium text-center">Total Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="duty-table-body" class="divide-y divide-slate-100">
+                            <!-- JS Rendered -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- DATA AWAL (State) ---
+        let dutyLogs = [{
+            id: 1, nama: 'Dr. John Doe', badgeNumber: '101', jabatan: 'Attending Physician',
+            jamMasuk: '08:00', jamKeluar: '16:00', tanggal: new Date().toISOString().split('T')[0],
+            tindakan: { treatment: 5, revive: 2, opMinor: 1, opMajor: 0, mcu: 3, kartuSehat: 4 }
+        }];
+
+        let stashLogs = [{
+            id: 1, nama: 'Dr. John Doe', badgeNumber: '101', jabatan: 'Attending Physician',
+            barang: 'First Aid', jumlah: 5, keperluan: 'Patroli Unit 1', waktu: new Date().toLocaleString('id-ID')
+        }];
+
+        let vehicleLogs = [{
+            id: 1, nama: 'Dr. John Doe', badgeNumber: '101', jabatan: 'Attending Physician',
+            kendaraan: 'Ambulance', platNomor: 'LSMC-01', keperluan: 'Patroli Kota', waktu: new Date().toLocaleString('id-ID')
+        }];
+
+        // --- DAFTAR DROPDOWN ---
+        const daftarJabatan = ['Chief Of Medical Center', 'Deputy Chief', 'Assistant Chief', 'Doctor Specialist', 'Doctor', 'Resident', 'Medical Student', 'Ambulanceman', 'Intern'];
+        const daftarBarang = ['Ifax', 'Anxiety Pills', 'First Aid', 'AED', 'Bandage', 'Painkillers', 'Surgical Kit', 'Wheelchair', 'Crutch', 'Radio', 'Handphone', 'Makanan', 'Minuman', 'Powerbank', 'Alat Service Hp'];
+        const daftarKendaraan = ['Sedan', 'Ambulance', 'Heli'];
+
+        // --- INISIALISASI ---
+        document.addEventListener('DOMContentLoaded', () => {
+            populateSelects();
+            renderDutyLogs();
+            renderStashLogs();
+            renderVehicleLogs();
+        });
+
+        function populateSelects() {
+            const populate = (id, arr) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                arr.forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item;
+                    opt.textContent = item;
+                    el.appendChild(opt);
+                });
+            };
+            populate('duty-jabatan', daftarJabatan);
+            populate('stash-jabatan', daftarJabatan);
+            populate('vehicle-jabatan', daftarJabatan);
+            populate('stash-barang', daftarBarang);
+            populate('vehicle-jenis', daftarKendaraan);
+        }
+
+        // --- TAB NAVIGATION ---
+        function switchTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('border-red-600', 'text-red-600');
+                el.classList.add('border-transparent', 'text-slate-500');
+            });
+            
+            // Show active tab
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`btn-${tabId}`);
+            activeBtn.classList.remove('border-transparent', 'text-slate-500');
+            activeBtn.classList.add('border-red-600', 'text-red-600');
+        }
+
+        // --- HELPERS ---
+        function calculateDuration(start, end) {
+            if (!start || !end) return '-';
+            const [startHour, startMin] = start.split(':').map(Number);
+            const [endHour, endMin] = end.split(':').map(Number);
+            let startInMinutes = startHour * 60 + startMin;
+            let endInMinutes = endHour * 60 + endMin;
+            if (endInMinutes < startInMinutes) endInMinutes += 24 * 60;
+            const diffMinutes = endInMinutes - startInMinutes;
+            return `${Math.floor(diffMinutes / 60)}j ${diffMinutes % 60}m`;
+        }
+
+        function getBadgeHTML(label, color) {
+            const colors = {
+                green: 'bg-green-100 text-green-700 border-green-200',
+                red: 'bg-red-100 text-red-700 border-red-200',
+                blue: 'bg-blue-100 text-blue-700 border-blue-200',
+                indigo: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+                purple: 'bg-purple-100 text-purple-700 border-purple-200',
+                amber: 'bg-amber-100 text-amber-700 border-amber-200',
+            };
+            return `<span class="text-[10px] font-bold px-2 py-0.5 rounded border ${colors[color]}">${label}</span>`;
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[tag]));
+        }
+
+        // --- RENDER FUNCTIONS ---
+        function renderDutyLogs(filterText = '') {
+            const tbody = document.getElementById('duty-table-body');
+            const summarySec = document.getElementById('summary-section');
+            const summaryBadges = document.getElementById('summary-badges');
+            
+            const filtered = dutyLogs.filter(log => 
+                log.nama.toLowerCase().includes(filterText.toLowerCase()) || 
+                log.badgeNumber.includes(filterText)
+            );
+
+            document.getElementById('duty-count').textContent = `${dutyLogs.length} Laporan`;
+            
+            // Handle Summary UI
+            if (filterText.trim() !== '') {
+                summarySec.classList.remove('hidden');
+                document.getElementById('summary-count').textContent = filtered.length;
+                
+                const summary = filtered.reduce((acc, log) => {
+                    Object.keys(log.tindakan).forEach(k => acc[k] = (acc[k] || 0) + log.tindakan[k]);
+                    return acc;
+                }, { treatment: 0, revive: 0, opMinor: 0, opMajor: 0, mcu: 0, kartuSehat: 0 });
+                
+                const totalFiltered = Object.values(summary).reduce((a, b) => a + b, 0);
+                
+                let badgesHTML = getBadgeHTML(`Total Tindakan: ${totalFiltered}`, 'indigo');
+                if(summary.treatment > 0) badgesHTML += getBadgeHTML(`Trt: ${summary.treatment}`, 'green');
+                if(summary.revive > 0) badgesHTML += getBadgeHTML(`Rev: ${summary.revive}`, 'red');
+                if(summary.opMinor > 0) badgesHTML += getBadgeHTML(`OpMin: ${summary.opMinor}`, 'blue');
+                if(summary.opMajor > 0) badgesHTML += getBadgeHTML(`OpMaj: ${summary.opMajor}`, 'indigo');
+                if(summary.mcu > 0) badgesHTML += getBadgeHTML(`MCU: ${summary.mcu}`, 'purple');
+                if(summary.kartuSehat > 0) badgesHTML += getBadgeHTML(`KS: ${summary.kartuSehat}`, 'amber');
+                
+                summaryBadges.innerHTML = badgesHTML;
+            } else {
+                summarySec.classList.add('hidden');
+            }
+
+            // Render Table
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-slate-400">${filterText ? 'Tidak ada laporan yang cocok dengan pencarian.' : 'Belum ada riwayat laporan shift.'}</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(log => {
+                const totalTindakan = Object.values(log.tindakan).reduce((a, b) => a + b, 0);
+                let actionsHTML = '';
+                if(log.tindakan.treatment > 0) actionsHTML += getBadgeHTML(`Trt: ${log.tindakan.treatment}`, 'green');
+                if(log.tindakan.revive > 0) actionsHTML += getBadgeHTML(`Rev: ${log.tindakan.revive}`, 'red');
+                if(log.tindakan.opMinor > 0) actionsHTML += getBadgeHTML(`OpMin: ${log.tindakan.opMinor}`, 'blue');
+                if(log.tindakan.opMajor > 0) actionsHTML += getBadgeHTML(`OpMaj: ${log.tindakan.opMajor}`, 'indigo');
+                if(log.tindakan.mcu > 0) actionsHTML += getBadgeHTML(`MCU: ${log.tindakan.mcu}`, 'purple');
+                if(log.tindakan.kartuSehat > 0) actionsHTML += getBadgeHTML(`KS: ${log.tindakan.kartuSehat}`, 'amber');
+                if(totalTindakan === 0) actionsHTML = '<span class="text-slate-400 text-xs italic">Tidak ada tindakan</span>';
+
+                return `
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap text-slate-500">${escapeHTML(log.tanggal)}</td>
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-slate-900">${escapeHTML(log.nama)}</div>
+                            <div class="text-xs text-slate-500">${escapeHTML(log.jabatan)} | Badge: ${escapeHTML(log.badgeNumber)}</div>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="bg-green-100 text-green-800 py-1 px-2 rounded text-xs">${escapeHTML(log.jamMasuk)}</span>
+                            <span class="mx-2 text-slate-400">-</span>
+                            <span class="bg-slate-100 text-slate-800 py-1 px-2 rounded text-xs">${escapeHTML(log.jamKeluar)}</span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="inline-flex items-center justify-center text-slate-700 font-semibold bg-slate-100 px-2.5 py-1 rounded-md text-xs border border-slate-200">
+                                <i class="ph ph-timer mr-1.5 text-slate-500"></i> ${calculateDuration(log.jamMasuk, log.jamKeluar)}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-wrap gap-1 justify-center max-w-xs mx-auto">${actionsHTML}</div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            // Check button disable state
+            document.getElementById('duty-delete-btn').disabled = dutyLogs.length === 0;
+            if(dutyLogs.length === 0) document.getElementById('duty-delete-btn').classList.add('opacity-50', 'cursor-not-allowed');
+            else document.getElementById('duty-delete-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
+        function renderStashLogs() {
+            const tbody = document.getElementById('stash-table-body');
+            document.getElementById('stash-count').textContent = `${stashLogs.length} Log`;
+            
+            if (stashLogs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-slate-400">Belum ada catatan pengambilan barang.</td></tr>`;
+            } else {
+                tbody.innerHTML = stashLogs.map(log => `
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-slate-500">${escapeHTML(log.waktu)}</td>
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-slate-900">${escapeHTML(log.nama)}</div>
+                            <div class="text-xs text-slate-500">${escapeHTML(log.jabatan)} | Badge: ${escapeHTML(log.badgeNumber)}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="font-semibold text-slate-800">${escapeHTML(log.barang)}</span>
+                            <span class="ml-2 bg-slate-100 text-slate-600 py-0.5 px-2 rounded-full text-xs font-bold">x${log.jumlah}</span>
+                        </td>
+                        <td class="px-6 py-4 text-slate-600 italic">${escapeHTML(log.keperluan || '-')}</td>
+                    </tr>
+                `).join('');
+            }
+            // Check button disable state
+            const btn = document.getElementById('stash-delete-btn');
+            btn.disabled = stashLogs.length === 0;
+            if(stashLogs.length === 0) btn.classList.add('opacity-50', 'cursor-not-allowed');
+            else btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
+        function renderVehicleLogs() {
+            const tbody = document.getElementById('vehicle-table-body');
+            document.getElementById('vehicle-count').textContent = `${vehicleLogs.length} Log`;
+            
+            if (vehicleLogs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-slate-400">Belum ada catatan penggunaan kendaraan.</td></tr>`;
+            } else {
+                tbody.innerHTML = vehicleLogs.map(log => `
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-slate-500">${escapeHTML(log.waktu)}</td>
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-slate-900">${escapeHTML(log.nama)}</div>
+                            <div class="text-xs text-slate-500">${escapeHTML(log.jabatan)} | Badge: ${escapeHTML(log.badgeNumber)}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="font-semibold text-slate-800">${escapeHTML(log.kendaraan)}</span>
+                            <span class="ml-2 bg-slate-100 text-slate-600 py-0.5 px-2 rounded text-xs border border-slate-200 font-mono">${escapeHTML(log.platNomor)}</span>
+                        </td>
+                        <td class="px-6 py-4 text-slate-600 italic">${escapeHTML(log.keperluan || '-')}</td>
+                    </tr>
+                `).join('');
+            }
+            // Check button disable state
+            const btn = document.getElementById('vehicle-delete-btn');
+            btn.disabled = vehicleLogs.length === 0;
+            if(vehicleLogs.length === 0) btn.classList.add('opacity-50', 'cursor-not-allowed');
+            else btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
+        // --- FORM SUBMITS ---
+        document.getElementById('duty-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newLog = {
+                id: Date.now(),
+                nama: document.getElementById('duty-nama').value,
+                badgeNumber: document.getElementById('duty-badge').value,
+                jabatan: document.getElementById('duty-jabatan').value,
+                jamMasuk: document.getElementById('duty-jamMasuk').value,
+                jamKeluar: document.getElementById('duty-jamKeluar').value,
+                tanggal: new Date().toISOString().split('T')[0],
+                tindakan: {
+                    treatment: parseInt(document.getElementById('duty-treatment').value) || 0,
+                    revive: parseInt(document.getElementById('duty-revive').value) || 0,
+                    opMinor: parseInt(document.getElementById('duty-opMinor').value) || 0,
+                    opMajor: parseInt(document.getElementById('duty-opMajor').value) || 0,
+                    mcu: parseInt(document.getElementById('duty-mcu').value) || 0,
+                    kartuSehat: parseInt(document.getElementById('duty-kartuSehat').value) || 0,
+                }
+            };
+            dutyLogs.unshift(newLog);
+            renderDutyLogs(document.getElementById('search-input').value);
+            this.reset();
+            alert('Laporan berhasil disimpan!');
+        });
+
+        document.getElementById('stash-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newLog = {
+                id: Date.now(),
+                nama: document.getElementById('stash-nama').value,
+                badgeNumber: document.getElementById('stash-badge').value,
+                jabatan: document.getElementById('stash-jabatan').value,
+                barang: document.getElementById('stash-barang').value,
+                jumlah: parseInt(document.getElementById('stash-jumlah').value) || 1,
+                keperluan: document.getElementById('stash-keperluan').value,
+                waktu: new Date().toLocaleString('id-ID')
+            };
+            stashLogs.unshift(newLog);
+            renderStashLogs();
+            
+            // Reset but keep name/badge/jabatan for convenience
+            document.getElementById('stash-barang').value = '';
+            document.getElementById('stash-jumlah').value = '1';
+            document.getElementById('stash-keperluan').value = '';
+            alert('Log Gudang berhasil dicatat!');
+        });
+
+        document.getElementById('vehicle-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newLog = {
+                id: Date.now(),
+                nama: document.getElementById('vehicle-nama').value,
+                badgeNumber: document.getElementById('vehicle-badge').value,
+                jabatan: document.getElementById('vehicle-jabatan').value,
+                kendaraan: document.getElementById('vehicle-jenis').value,
+                platNomor: document.getElementById('vehicle-plat').value,
+                keperluan: document.getElementById('vehicle-keperluan').value,
+                waktu: new Date().toLocaleString('id-ID')
+            };
+            vehicleLogs.unshift(newLog);
+            renderVehicleLogs();
+            
+            // Reset partly
+            document.getElementById('vehicle-jenis').value = '';
+            document.getElementById('vehicle-plat').value = '';
+            document.getElementById('vehicle-keperluan').value = '';
+            alert('Log Kendaraan berhasil dicatat!');
+        });
+
+        // --- SEARCH EVENT ---
+        document.getElementById('search-input').addEventListener('input', function(e) {
+            renderDutyLogs(e.target.value);
+        });
+
+        // --- DELETE CONFIRMATION LOGIC ---
+        function toggleDeleteConfirm(type, show) {
+            const confirmEl = document.getElementById(`${type}-delete-confirm`);
+            const btnEl = document.getElementById(`${type}-delete-btn`);
+            if (show) {
+                confirmEl.classList.remove('hidden');
+                btnEl.classList.add('hidden');
+            } else {
+                confirmEl.classList.add('hidden');
+                btnEl.classList.remove('hidden');
+            }
+        }
+
+        function executeResetDuty() {
+            dutyLogs = [];
+            renderDutyLogs(document.getElementById('search-input').value);
+            toggleDeleteConfirm('duty', false);
+        }
+
+        function executeResetStash() {
+            stashLogs = [];
+            renderStashLogs();
+            toggleDeleteConfirm('stash', false);
+        }
+
+        function executeResetVehicle() {
+            vehicleLogs = [];
+            renderVehicleLogs();
+            toggleDeleteConfirm('vehicle', false);
+        }
+
+    </script>
+</body>
+</html>
